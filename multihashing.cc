@@ -389,31 +389,14 @@ NAN_METHOD(shavite3) {
 NAN_METHOD(cryptonight) {
 
     bool fast = false;
-    uint32_t cn_variant = 0;
-    uint64_t height = 0;
 
     if (info.Length() < 1)
         return THROW_ERROR_EXCEPTION("You must provide one argument.");
     
-
     if (info.Length() >= 2) {
-        if(info[1]->IsBoolean())
-            fast = Nan::To<bool>(info[1]).ToChecked();
-        else if(info[1]->IsUint32())
-            cn_variant = Nan::To<uint32_t>(info[1]).ToChecked();
-        else
+        if(!info[1]->IsBoolean())
             return THROW_ERROR_EXCEPTION("Argument 2 should be a boolean");
-    }
-
-    if ((cn_variant == 4) && (info.Length() < 3)) {
-        return THROW_ERROR_EXCEPTION("You must provide Argument 3 (block height) for Cryptonight variant 4");
-    }
-
-    if (info.Length() >= 3) {
-        if(info[2]->IsUint32())
-            height = Nan::To<uint32_t>(info[2]).ToChecked();
-        else
-            return THROW_ERROR_EXCEPTION("Argument 3 should be uint32_t");
+        fast = Nan::To<bool>(info[1]).ToChecked();
     }
 
     Local<Object> target = Nan::To<Object>(info[0]).ToLocalChecked();
@@ -428,11 +411,8 @@ NAN_METHOD(cryptonight) {
 
     if(fast)
         cryptonight_fast_hash(input, output, input_len);
-    else {
-        if ((cn_variant == 1) && input_len < 43)
-            return THROW_ERROR_EXCEPTION("Argument must be 43 bytes for monero variant 1");
-        cryptonight_hash(input, output, input_len, cn_variant, height);
-    }
+    else
+        cryptonight_hash(input, output, input_len);
 
     info.GetReturnValue().Set(Nan::NewBuffer(output, 32).ToLocalChecked());
 }
